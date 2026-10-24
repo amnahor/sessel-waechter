@@ -65,8 +65,10 @@ def mail(titel, text):
     msg["From"] = nutzer
     msg["To"] = os.environ.get("EMAIL_TO") or nutzer
     msg.set_content(text)
-    with smtplib.SMTP_SSL("smtp.gmail.com", 465, timeout=30) as s:
-        s.login(nutzer, os.environ["SMTP_PASS"])
+    passwort = os.environ["SMTP_PASS"].replace(" ", "").strip()
+    with smtplib.SMTP("smtp.gmail.com", 587, timeout=30) as s:
+        s.starttls()
+        s.login(nutzer, passwort)
         s.send_message(msg)
 
 
