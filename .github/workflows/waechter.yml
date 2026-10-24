@@ -1,0 +1,42 @@
+name: Sessel-Wächter
+
+on:
+  schedule:
+    - cron: "*/5 * * * *"
+  workflow_dispatch:
+    inputs:
+      test_push:
+        description: "Nur Testnachricht schicken"
+        type: boolean
+        default: false
+
+concurrency:
+  group: waechter
+  cancel-in-progress: false
+
+jobs:
+  pruefen:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Letzten Zustand laden
+        uses: actions/cache/restore@v4
+        with:
+          path: zustand.json
+          key: zustand-${{ github.run_id }}
+          restore-keys: zustand-
+
+      - name: Bestand prüfen
+        env:
+          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+          TEST_PUSH: ${{ inputs.test_push && '1' || '0' }}
+        run: python3 waechter.py
+
+      - name: Zustand speichern
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: zustand.json
+          key: zustand-${{ github.run_id }}
