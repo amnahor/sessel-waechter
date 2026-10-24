@@ -66,10 +66,17 @@ def mail(titel, text):
     msg["To"] = os.environ.get("EMAIL_TO") or nutzer
     msg.set_content(text)
     passwort = os.environ["SMTP_PASS"].replace(" ", "").strip()
-    with smtplib.SMTP("smtp.gmail.com", 587, timeout=30) as s:
-        s.starttls()
-        s.login(nutzer, passwort)
-        s.send_message(msg)
+    schritt = "Verbinden"
+    try:
+        with smtplib.SMTP("smtp.gmail.com", 587, timeout=30) as s:
+            schritt = "STARTTLS"
+            s.starttls()
+            schritt = f"Anmeldung (Passwortlänge {len(passwort)})"
+            s.login(nutzer, passwort)
+            schritt = "Senden"
+            s.send_message(msg)
+    except Exception as e:
+        raise RuntimeError(f"{schritt}: {type(e).__name__}: {e}") from e
 
 
 def main():
