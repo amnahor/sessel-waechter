@@ -2,6 +2,7 @@
 
 Umgebungsvariablen:
   NTFY_TOPIC  ntfy-Thema (geheim halten, wer es kennt, kann mitlesen)
+  EMAIL_TO    optional: Adresse, an die ntfy jede Meldung zusätzlich mailt
   STATE_FILE  Datei für den letzten Zustand (Standard: zustand.json)
   TEST_PUSH   wenn "1": schickt eine Testnachricht und beendet sich
 """
@@ -37,11 +38,11 @@ def bestand():
 
 def push(titel, text, prio="urgent"):
     topic = os.environ["NTFY_TOPIC"]
-    req = urllib.request.Request(
-        f"https://ntfy.sh/{topic}",
-        data=text.encode(),
-        headers={"Title": titel, "Priority": prio, "Click": PRODUKT_URL, "Tags": "couch_and_lamp"},
-    )
+    headers = {"Title": titel, "Priority": prio, "Click": PRODUKT_URL, "Tags": "couch_and_lamp"}
+    if os.environ.get("EMAIL_TO"):
+        headers["Email"] = os.environ["EMAIL_TO"]
+        text += f"\n{PRODUKT_URL}"
+    req = urllib.request.Request(f"https://ntfy.sh/{topic}", data=text.encode(), headers=headers)
     urllib.request.urlopen(req, timeout=30)
 
 

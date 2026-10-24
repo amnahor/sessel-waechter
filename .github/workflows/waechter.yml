@@ -31,6 +31,7 @@ jobs:
       - name: Bestand prüfen
         env:
           NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+          EMAIL_TO: ${{ secrets.EMAIL_TO }}
           TEST_PUSH: ${{ inputs.test_push && '1' || '0' }}
         run: python3 waechter.py
 
