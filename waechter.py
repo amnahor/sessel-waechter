@@ -61,7 +61,7 @@ def push(titel, text, prio="urgent"):
 def mail(titel, text):
     nutzer = os.environ["SMTP_USER"]
     msg = EmailMessage()
-    msg["Subject"] = titel
+    msg["Subject"] = f"🔥REMMELS🔥 {titel}"
     msg["From"] = nutzer
     msg["To"] = os.environ.get("EMAIL_TO") or nutzer
     msg.set_content(text)
@@ -71,7 +71,7 @@ def mail(titel, text):
         with smtplib.SMTP("smtp.gmail.com", 587, timeout=30) as s:
             schritt = "STARTTLS"
             s.starttls()
-            schritt = f"Anmeldung (Passwortlänge {len(passwort)})"
+            schritt = "Anmeldung"
             s.login(nutzer, passwort)
             schritt = "Senden"
             s.send_message(msg)
