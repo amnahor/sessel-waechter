@@ -2,15 +2,19 @@
 
 Umgebungsvariablen:
   NTFY_TOPIC  ntfy-Thema (geheim halten, wer es kennt, kann mitlesen)
-  EMAIL_TO    optional: Adresse, an die ntfy jede Meldung zusätzlich mailt
+  SMTP_USER   optional: Gmail-Adresse, über die Meldungen zusätzlich gemailt werden
+  SMTP_PASS   optional: Gmail-App-Passwort dazu (ohne: keine E-Mail)
+  EMAIL_TO    optional: Empfänger (Standard: SMTP_USER)
   STATE_FILE  Datei für den letzten Zustand (Standard: zustand.json)
   TEST_PUSH   wenn "1": schickt eine Testnachricht und beendet sich
 """
 
 import json
 import os
+import smtplib
 import sys
 import urllib.request
+from email.message import EmailMessage
 
 ARTIKEL = "3650325"
 SALES_ORG = "1023"
@@ -37,13 +41,33 @@ def bestand():
 
 
 def push(titel, text, prio="urgent"):
-    topic = os.environ["NTFY_TOPIC"]
-    headers = {"Title": titel, "Priority": prio, "Click": PRODUKT_URL, "Tags": "couch_and_lamp"}
-    if os.environ.get("EMAIL_TO"):
-        headers["Email"] = os.environ["EMAIL_TO"]
-        text += f"\n{PRODUKT_URL}"
-    req = urllib.request.Request(f"https://ntfy.sh/{topic}", data=text.encode(), headers=headers)
-    urllib.request.urlopen(req, timeout=30)
+    fehler = []
+    try:
+        topic = os.environ["NTFY_TOPIC"]
+        headers = {"Title": titel, "Priority": prio, "Click": PRODUKT_URL, "Tags": "couch_and_lamp"}
+        req = urllib.request.Request(f"https://ntfy.sh/{topic}", data=text.encode(), headers=headers)
+        urllib.request.urlopen(req, timeout=30)
+    except Exception as e:
+        fehler.append(f"ntfy: {e}")
+    if os.environ.get("SMTP_PASS"):
+        try:
+            mail(titel, f"{text}\n\n{PRODUKT_URL}")
+        except Exception as e:
+            fehler.append(f"E-Mail: {e}")
+    if fehler:
+        raise RuntimeError("; ".join(fehler))
+
+
+def mail(titel, text):
+    nutzer = os.environ["SMTP_USER"]
+    msg = EmailMessage()
+    msg["Subject"] = titel
+    msg["From"] = nutzer
+    msg["To"] = os.environ.get("EMAIL_TO") or nutzer
+    msg.set_content(text)
+    with smtplib.SMTP_SSL("smtp.gmail.com", 465, timeout=30) as s:
+        s.login(nutzer, os.environ["SMTP_PASS"])
+        s.send_message(msg)
 
 
 def main():
