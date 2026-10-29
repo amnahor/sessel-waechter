@@ -2,7 +2,9 @@ name: Sessel-Wächter
 
 on:
   schedule:
-    - cron: "*/5 * * * *"
+    # Nur tagsüber, 10–18 Uhr deutscher Winterzeit (9–17 Uhr UTC; im Sommer 11–19 Uhr): spart GitHub-Minuten.
+    # GitHub führt geplante Läufe ohnehin nur alle paar Stunden aus, nicht wirklich alle 5 Minuten.
+    - cron: "*/5 9-16 * * *"
   workflow_dispatch:
     inputs:
       test_push:
